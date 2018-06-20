@@ -11,22 +11,16 @@ source:
 
 build:
   number: 0
-  skip: true  # [win and (py36 or py27)]
-
-  features:
-    - vc10  # [win and py34]
-    - vc14  # [win and py35]
+  skip: true  # [win and vc<10]
 
 requirements:
   build:
-    - toolchain
     - cmake
-    - python  # [win]
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - make   # [unix]
 
 test:
-  requires:
-    - python 3.4.*  # [win and py34]
-    - python 3.5.*  # [win and py35]
   commands:
     - brotli --help
     - test -f $PREFIX/lib/libbrotlienc$SHLIB_EXT     # [unix]
@@ -59,3 +53,4 @@ extra:
     - wesm
     - xhochy
     - CJ-Wright
+    - msarahan
