@@ -1,4 +1,4 @@
-{% set version = "1.0.3" %}
+{% set version = "1.0.6" %}
 
 package:
   name: brotli
@@ -7,7 +7,7 @@ package:
 source:
   fn: brotli-{{ version }}.tar.gz
   url: https://github.com/google/brotli/archive/v{{ version }}.tar.gz
-  sha256: 7948154166ef8556f8426a4ede219aaa98a81a5baffe1f7cf2523fa67d59cd1c
+  sha256: ce94b7f48af5e8f444c3949ca93201c1b4bb40da633db084e900133ce87848db
 
 build:
   number: 0
