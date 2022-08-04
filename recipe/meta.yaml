@@ -175,6 +175,8 @@ outputs:
       host:
         - python
         - pip
+        - setuptools
+        - wheel
         - {{ pin_subpackage('brotli', exact=True) }}
       run:
         - python 
@@ -183,7 +185,7 @@ outputs:
         - brotli
 
 about:
-  home: http://github.com/google/brotli
+  home: https://github.com/google/brotli
   license: MIT
   license_file: LICENSE
   summary: Brotli compression format
