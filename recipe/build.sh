@@ -3,14 +3,18 @@
 set -e
 
 BROTLI_CFLAGS="-O3"
-BROTLI_CXXFLAGS="-O3"
 
 # Build both static and shared libraries
-cmake -DCMAKE_INSTALL_PREFIX=$PREFIX \
+cmake ${CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=$PREFIX \
       -DCMAKE_INSTALL_LIBDIR=$PREFIX/lib \
       -DCMAKE_C_FLAGS=$BROTLI_CFLAGS \
-      -DCMAKE_CXX_FLAGS=$BROTLI_CXXFLAGS
+      -GNinja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_STATIC_LIBS=OFF \
+      .
 
-make -j${CPU_COUNT}
+ninja
+if [[ "${CONDA_BUILD_CROSS_COMPILATION:-}" != "1" || "${CROSSCOMPILING_EMULATOR}" != "" ]]; then
 ctest -V
-make install
+fi
+# ninja install
