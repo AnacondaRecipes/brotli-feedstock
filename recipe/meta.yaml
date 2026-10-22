@@ -22,6 +22,8 @@ requirements:
     - {{ compiler('c') }}
     - cmake
     - ninja-base
+    # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+    - libcurl <8.18
 
 outputs:
   - name: libbrotlicommon
@@ -36,6 +38,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
     test:
       commands:
         # CFEP-18: Static libs shouldn't be part of the main package
@@ -56,6 +60,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
       run:
@@ -80,6 +86,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
       run:
@@ -101,6 +109,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlienc", exact=True) }}
         - {{ pin_subpackage("libbrotlidec", exact=True) }}
@@ -124,6 +134,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlienc", exact=True) }}
         - {{ pin_subpackage("libbrotlidec", exact=True) }}
@@ -168,6 +180,8 @@ outputs:
         - {{ compiler('c') }}
         - cmake
         - ninja-base
+        # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
+        - libcurl <8.18
       host:
         - pip
         - python
