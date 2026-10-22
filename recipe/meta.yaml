@@ -1,5 +1,5 @@
 {% set name = "brotli" %}
-{% set version = "1.2.0" %}
+{% set version = "1.2.1" %}
 
 package:
   name: {{ name }}-split
@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://github.com/google/{{ name }}/archive/v{{ version }}.tar.gz
-  sha256: 816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec
+  sha256: 98d35d11a78dc453aebb7d10c3748f3f73ff78c8267c0dc697b8631f67bf7e8f
 
 build:
   number: 0
@@ -191,6 +191,9 @@ about:
   dev_url: https://github.com/google/brotli
 
 extra:
+  skip-lints:
+    - host_section_needs_exact_pinnings  # pin_subpackage(exact=True) is the exact sibling pin; linter does not expand it
+    - cbc_dep_in_run_missing_from_host  # same exact pins are already in host; CBC name match is a false positive
   recipe-maintainers:
     - wesm
     - xhochy
