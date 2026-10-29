@@ -8,7 +8,7 @@ pushd build_shared_%CMAKE_CONFIG%
 
 echo on
 
-cmake --build . --target install
+cmake --build . --parallel %CPU_COUNT% --target install
 if errorlevel 1 exit 1
 
 if [%PKG_NAME%] == [libbrotlicommon] (

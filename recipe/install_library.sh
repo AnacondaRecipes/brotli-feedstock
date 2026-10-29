@@ -2,7 +2,7 @@
 
 set -exo pipefail
 
-ninja install
+cmake --build . --parallel ${CPU_COUNT} --target install
 
 if [[ "${PKG_NAME}" == "libbrotlicommon" ]]; then
   rm -rf ${PREFIX}/bin/brotli
