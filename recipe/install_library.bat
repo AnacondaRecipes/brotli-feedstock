@@ -1,3 +1,5 @@
+@echo on
+
 echo "--------------------------"
 echo "Installing brotli binaries"
 

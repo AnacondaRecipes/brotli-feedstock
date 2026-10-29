@@ -1,3 +1,5 @@
+@echo on
+
 set CMAKE_CONFIG=Release
 
 mkdir build_shared_%CMAKE_CONFIG%

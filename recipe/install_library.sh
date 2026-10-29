@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -exo pipefail
+
 ninja install
 
 if [[ "${PKG_NAME}" == "libbrotlicommon" ]]; then

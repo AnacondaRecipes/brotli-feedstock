@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -exo pipefail
 
 BROTLI_CFLAGS="-O3"
 
