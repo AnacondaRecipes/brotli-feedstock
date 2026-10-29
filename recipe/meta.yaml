@@ -1,36 +1,37 @@
-{% set version = "1.0.9" %}
+{% set name = "brotli" %}
+{% set version = "1.0.10" %}
 
 package:
-  name: brotli-split
+  name: {{ name }}-split
   version: {{ version }}
 
 source:
-  fn: brotli-{{ version }}.tar.gz
-  url: https://github.com/google/brotli/archive/v{{ version }}.tar.gz
-  sha256: f9e8d81d0405ba66d181529af42a3354f838c939095ff99930da6aa9cdf6fe46
+  url: https://github.com/google/{{ name }}/archive/v{{ version }}.tar.gz
+  sha256: b517ebdb5266b963d28d6e639b973479874ec72086deb6ee4a2d639e1b13606b
   patches:
+    # 1.0.10 has no BUILD_SHARED_LIBS/BUILD_STATIC_LIBS options (added upstream in 1.1.0)
     - 0001-Add-separate-options-to-disable-shared-static-librar.patch
-    # remove this patch when next release comes out
+    # 1.0.10 still adds -R${libdir} to the pkg-config files (fixed upstream in 1.1.0)
     - 0002-Fix-pkgconfig-rpath.patch
 
 build:
-  number: 9
+  number: 0
   run_exports:
     # https://abi-laboratory.pro/index.php?view=timeline&l=brotli
     # No minor versions to ensure ABI compatibility history
     - {{ pin_subpackage('brotli', max_pin='x.x') }}
 
-
 requirements:
   build:
-    - cmake
+    - {{ stdlib('c') }}
     - {{ compiler('c') }}
-    - {{ compiler('cxx') }}
-    - ninja
-    - m2-patch  # [win]
-    - patch     # [not win]
-  host:
-
+    - cmake
+    - ninja-base
+    # brotli itself does not depend on libcurl. It is only pulled into the build
+    # environment by cmake. libcurl >=8.18 depends on libbrotli from this channel,
+    # which makes the build env depend on the packages built here (circular), and
+    # the exact pin_subpackage pins then fail the output hash check.
+    - libcurl <8.18
 
 outputs:
   - name: libbrotlicommon
@@ -41,16 +42,19 @@ outputs:
     script: install_library.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - ninja
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
     test:
       commands:
-        - test -f $PREFIX/lib/libbrotlicommon$SHLIB_EXT  # [unix]
-        - if not exist %LIBRARY_BIN%\\brotlicommon.dll exit 1         # [win]
-        - if not exist %LIBRARY_LIB%\\brotlicommon.lib exit 1         # [win]
         # CFEP-18: Static libs shouldn't be part of the main package
-        - test ! -f $PREFIX/lib/libbrotlicommon-static.a   # [unix]
+        - test ! -f ${PREFIX}/lib/libbrotlicommon-static.a        # [unix]
+        - test -f ${PREFIX}/lib/libbrotlicommon${SHLIB_EXT}       # [unix]
+        - if not exist %LIBRARY_BIN%\\brotlicommon.dll exit 1     # [win]
+        - if not exist %LIBRARY_LIB%\\brotlicommon.lib exit 1     # [win]
         - if exist %LIBRARY_LIB%\\brotlicommon-static.lib exit 1  # [win]
   - name: libbrotlienc
     build:
@@ -60,21 +64,24 @@ outputs:
     script: install_library.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - ninja
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
       run:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
     test:
       commands:
-        - test -f $PREFIX/lib/libbrotlienc$SHLIB_EXT     # [unix]
-        - if not exist %LIBRARY_BIN%\\brotlienc.dll exit 1            # [win]
-        - if not exist %LIBRARY_LIB%\\brotlienc.lib exit 1            # [win]
         # CFEP-18: Static libs shouldn't be part of the main package
-        - test ! -f $PREFIX/lib/libbrotlienc-static.a      # [unix]
-        - if exist %LIBRARY_LIB%\\brotlienc-static.lib exit 1     # [win]
+        - test ! -f ${PREFIX}/lib/libbrotlienc-static.a        # [unix]
+        - test -f ${PREFIX}/lib/libbrotlienc${SHLIB_EXT}       # [unix]
+        - if not exist %LIBRARY_BIN%\\brotlienc.dll exit 1     # [win]
+        - if not exist %LIBRARY_LIB%\\brotlienc.lib exit 1     # [win]
+        - if exist %LIBRARY_LIB%\\brotlienc-static.lib exit 1  # [win]
   - name: libbrotlidec
     build:
       run_exports:
@@ -83,29 +90,35 @@ outputs:
     script: install_library.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - ninja
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
       run:
         - {{ pin_subpackage("libbrotlicommon", exact=True) }}
     test:
       commands:
-        - test -f $PREFIX/lib/libbrotlidec$SHLIB_EXT     # [unix]
-        - if not exist %LIBRARY_BIN%\\brotlidec.dll exit 1            # [win]
-        - if not exist %LIBRARY_LIB%\\brotlidec.lib exit 1            # [win]
         # CFEP-18: Static libs shouldn't be part of the main package
-        - test ! -f $PREFIX/lib/libbrotlidec-static.a      # [unix]
-        - if exist %LIBRARY_LIB%\\brotlidec-static.lib exit 1     # [win]
+        - test ! -f $PREFIX/lib/libbrotlidec-static.a          # [unix]
+        - test -f $PREFIX/lib/libbrotlidec$SHLIB_EXT           # [unix]
+        - if not exist %LIBRARY_BIN%\\brotlidec.dll exit 1     # [win]
+        - if not exist %LIBRARY_LIB%\\brotlidec.lib exit 1     # [win]
+        - if exist %LIBRARY_LIB%\\brotlidec-static.lib exit 1  # [win]
   - name: brotli-bin
     script: install_library.sh  # [unix]
     script: install_library.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - ninja
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlienc", exact=True) }}
         - {{ pin_subpackage("libbrotlidec", exact=True) }}
@@ -125,9 +138,12 @@ outputs:
     script: install_library.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - ninja
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
       host:
         - {{ pin_subpackage("libbrotlienc", exact=True) }}
         - {{ pin_subpackage("libbrotlidec", exact=True) }}
@@ -139,23 +155,23 @@ outputs:
     test:
       commands:
         - brotli --help
-        - test -f $PREFIX/lib/libbrotlienc$SHLIB_EXT     # [unix]
-        - test -f $PREFIX/lib/libbrotlidec$SHLIB_EXT     # [unix]
-        - test -f $PREFIX/lib/libbrotlicommon$SHLIB_EXT  # [unix]
-        - test -f $PREFIX/include/brotli/encode.h        # [unix]
-        - if not exist %LIBRARY_BIN%\\brotli.exe exit 1               # [win]
-        - if not exist %LIBRARY_BIN%\\brotlicommon.dll exit 1         # [win]
-        - if not exist %LIBRARY_BIN%\\brotlidec.dll exit 1            # [win]
-        - if not exist %LIBRARY_BIN%\\brotlienc.dll exit 1            # [win]
-        - if not exist %LIBRARY_LIB%\\brotlicommon.lib exit 1         # [win]
-        - if not exist %LIBRARY_LIB%\\brotlidec.lib exit 1            # [win]
-        - if not exist %LIBRARY_LIB%\\brotlienc.lib exit 1            # [win]
-        - if not exist %LIBRARY_INC%\\brotli\\encode.h exit 1         # [win]
+        - test -f $PREFIX/lib/libbrotlienc${SHLIB_EXT}         # [unix]
+        - test -f $PREFIX/lib/libbrotlidec${SHLIB_EXT}         # [unix]
+        - test -f $PREFIX/lib/libbrotlicommon${SHLIB_EXT}      # [unix]
+        - test -f $PREFIX/include/brotli/encode.h              # [unix]
+        - if not exist %LIBRARY_BIN%\\brotli.exe exit 1        # [win]
+        - if not exist %LIBRARY_BIN%\\brotlicommon.dll exit 1  # [win]
+        - if not exist %LIBRARY_BIN%\\brotlidec.dll exit 1     # [win]
+        - if not exist %LIBRARY_BIN%\\brotlienc.dll exit 1     # [win]
+        - if not exist %LIBRARY_LIB%\\brotlicommon.lib exit 1  # [win]
+        - if not exist %LIBRARY_LIB%\\brotlidec.lib exit 1     # [win]
+        - if not exist %LIBRARY_LIB%\\brotlienc.lib exit 1     # [win]
+        - if not exist %LIBRARY_INC%\\brotli\\encode.h exit 1  # [win]
 
         # CFEP-18: Static libs shouldn't be part of the main package
-        - test ! -f $PREFIX/lib/libbrotlienc-static.a      # [unix]
-        - test ! -f $PREFIX/lib/libbrotlidec-static.a      # [unix]
-        - test ! -f $PREFIX/lib/libbrotlicommon-static.a   # [unix]
+        - test ! -f $PREFIX/lib/libbrotlienc-static.a             # [unix]
+        - test ! -f $PREFIX/lib/libbrotlidec-static.a             # [unix]
+        - test ! -f $PREFIX/lib/libbrotlicommon-static.a          # [unix]
         - if exist %LIBRARY_LIB%\\brotlicommon-static.lib exit 1  # [win]
         - if exist %LIBRARY_LIB%\\brotlidec-static.lib exit 1     # [win]
         - if exist %LIBRARY_LIB%\\brotlienc-static.lib exit 1     # [win]
@@ -168,13 +184,16 @@ outputs:
     script: install_python.bat  # [win]
     requirements:
       build:
-        - cmake
+        - {{ stdlib('c') }}
         - {{ compiler('c') }}
-        - {{ compiler('cxx') }}
-        - ninja
+        - {{ compiler('cxx') }}  # 1.0.10 python extension is C++ (python/_brotli.cc)
+        - cmake
+        - ninja-base
+        # libcurl pin: see the comment in the top-level build requirements
+        - libcurl <8.18
       host:
-        - python
         - pip
+        - python
         - setuptools
         - wheel
         - {{ pin_subpackage('brotli', exact=True) }}
@@ -183,14 +202,25 @@ outputs:
     test:
       imports:
         - brotli
+      requires:
+        - pip
+      commands:
+        - pip check
 
 about:
   home: https://github.com/google/brotli
   license: MIT
+  license_family: MIT
   license_file: LICENSE
   summary: Brotli compression format
+  description: Brotli compression format
+  doc_url: https://github.com/google/brotli/tree/master/docs
+  dev_url: https://github.com/google/brotli
 
 extra:
+  skip-lints:
+    - host_section_needs_exact_pinnings  # pin_subpackage(exact=True) is the exact sibling pin; linter does not expand it
+    - cbc_dep_in_run_missing_from_host  # same exact pins are already in host; CBC name match is a false positive
   recipe-maintainers:
     - wesm
     - xhochy
