@@ -14,5 +14,3 @@ ninja
 if errorlevel 1 exit 1
 ctest -V
 if errorlevel 1 exit 1
-REM cmake --build . --target install
-REM if errorlevel 1 exit 1

@@ -10,7 +10,7 @@ source:
   sha256: 98d35d11a78dc453aebb7d10c3748f3f73ff78c8267c0dc697b8631f67bf7e8f
 
 build:
-  number: 0
+  number: 1
   run_exports:
     # https://abi-laboratory.pro/index.php?view=timeline&l=brotli
     # No minor versions to ensure ABI compatibility history
@@ -40,6 +40,7 @@ outputs:
         - ninja-base
         # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
         - libcurl <8.18
+      host: []
     test:
       commands:
         # CFEP-18: Static libs shouldn't be part of the main package
@@ -48,6 +49,7 @@ outputs:
         - if not exist %LIBRARY_BIN%\\brotlicommon.dll exit 1     # [win]
         - if not exist %LIBRARY_LIB%\\brotlicommon.lib exit 1     # [win]
         - if exist %LIBRARY_LIB%\\brotlicommon-static.lib exit 1  # [win]
+
   - name: libbrotlienc
     build:
       run_exports:
@@ -74,6 +76,7 @@ outputs:
         - if not exist %LIBRARY_BIN%\\brotlienc.dll exit 1     # [win]
         - if not exist %LIBRARY_LIB%\\brotlienc.lib exit 1     # [win]
         - if exist %LIBRARY_LIB%\\brotlienc-static.lib exit 1  # [win]
+
   - name: libbrotlidec
     build:
       run_exports:
@@ -100,6 +103,7 @@ outputs:
         - if not exist %LIBRARY_BIN%\\brotlidec.dll exit 1     # [win]
         - if not exist %LIBRARY_LIB%\\brotlidec.lib exit 1     # [win]
         - if exist %LIBRARY_LIB%\\brotlidec-static.lib exit 1  # [win]
+
   - name: brotli-bin
     script: install_library.sh  # [unix]
     script: install_library.bat  # [win]
@@ -120,6 +124,7 @@ outputs:
     test:
       commands:
         - brotli --help
+
   - name: brotli
     build:
       run_exports:
@@ -183,16 +188,39 @@ outputs:
         # libcurl >=8.18 depends on channel libbrotli; those exact pins fail the output hash check
         - libcurl <8.18
       host:
+        # pkgconfig is required if the USE_SYSTEM_BROTLI env variable is enabled in the install_python scripts,
+        # https://github.com/google/brotli/blob/v1.2.1/setup.py#L191
+        - pkgconfig
         - pip
         - python
         - setuptools
         - wheel
+        # Headers (include/brotli/*.h) ship only in the `brotli` output
         - {{ pin_subpackage('brotli', exact=True) }}
+        # DSOs and .pc files linked by setup.py: -lbrotlicommon -lbrotlienc -lbrotlidec,
+        # https://github.com/google/brotli/blob/v1.2.1/setup.py#L193
+        - {{ pin_subpackage('libbrotlicommon', exact=True) }}
+        - {{ pin_subpackage('libbrotlienc', exact=True) }}
+        - {{ pin_subpackage('libbrotlidec', exact=True) }}
       run:
-        - python 
+        - python
+        # Direct owners of the needed DSOs; libbrotlicommon is dead-stripped and comes transitively
+        - {{ pin_subpackage('libbrotlienc', exact=True) }}
+        - {{ pin_subpackage('libbrotlidec', exact=True) }}
     test:
       imports:
         - brotli
+      requires:
+        - pip
+      commands:
+        - pip check
+        - python -c "import brotli; d=b'x'*1000; assert brotli.decompress(brotli.compress(d))==d"
+        # Positive check: the extension must reference the shared libs (fails if vendored)
+        - python -c "import _brotli,re,pathlib;b=pathlib.Path(_brotli.__file__).read_bytes();assert all(re.search(rb'brotli'+n+rb'[.\w]*[.](dylib|so|dll)',b,re.I) for n in (b'enc',b'dec'))"
+        # Negative check: no encoder/decoder code compiled into the extension
+        - nm -gU "$(python -c 'import _brotli;print(_brotli.__file__)')" > _brotli.syms  # [osx]
+        - nm -D --defined-only "$(≈)" > _brotli.syms  # [linux]
+        - test -z "$(grep -E 'Brotli(Encoder|Decoder)' _brotli.syms)"  # [unix]
 
 about:
   home: https://github.com/google/brotli
@@ -200,7 +228,12 @@ about:
   license_family: MIT
   license_file: LICENSE
   summary: Brotli compression format
-  description: Brotli compression format
+  description: |
+    Brotli is a generic-purpose lossless compression algorithm that compresses data
+    using a combination of a modern variant of the LZ77 algorithm, Huffman coding
+    and 2nd order context modeling, with a compression ratio comparable
+    to the best currently available general-purpose compression methods.
+    It is similar in speed with deflate but offers more dense compression.
   doc_url: https://github.com/google/brotli/tree/master/docs
   dev_url: https://github.com/google/brotli
 
