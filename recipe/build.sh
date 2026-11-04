@@ -9,7 +9,7 @@ BROTLI_CFLAGS="-O3"
 mkdir -p "${PREFIX}"/lib
 
 # Build both static and shared libraries
-cmake -GNinja "${CMAKE_ARGS}" \
+cmake -GNinja ${CMAKE_ARGS} \
       -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
       -DCMAKE_INSTALL_LIBDIR="${PREFIX}"/lib \
       -DCMAKE_C_FLAGS="${BROTLI_CFLAGS}" \
