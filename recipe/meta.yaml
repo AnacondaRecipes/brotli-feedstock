@@ -204,7 +204,7 @@ outputs:
         - {{ pin_subpackage('libbrotlidec', exact=True) }}
       run:
         - python
-        # Direct owners of the needed DSOs; libbrotlicommon is dead-stripped and comes transitively
+        # Direct owners of the needed DSOs; libbrotlicommon comes transitively
         - {{ pin_subpackage('libbrotlienc', exact=True) }}
         - {{ pin_subpackage('libbrotlidec', exact=True) }}
     test:
